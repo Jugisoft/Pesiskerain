@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime
 
 # --- 1. ASETUKSET JA TYYLIT ---
-st.set_page_config(page_title="Pesis Live v4.0", layout="wide")
+st.set_page_config(page_title="Pesis Live v4.1 - JoMa vs SoJy", layout="wide")
 
 st.markdown("""
     <style>
@@ -12,7 +12,6 @@ st.markdown("""
     div[data-testid="stVerticalBlock"] { gap: 0.1rem !important; }
     div.stRadio > div { gap: 2px !important; padding: 0px !important; }
     div.stRadio label { font-size: 10px !important; }
-    .stTextInput input, .stSelectbox div { height: 30px !important; font-size: 12px !important; }
     hr { margin: 0.3rem 0 !important; }
     </style>
     """, unsafe_allow_html=True)
@@ -22,40 +21,39 @@ if 'data' not in st.session_state: st.session_state.data = pd.DataFrame()
 for var in ['v_lyoja', 'v_suunta', 'v_tyyppi', 'v_tulos', 'v_up', 'v_up_laatu', 'v_lyonti_nro']:
     if var not in st.session_state: st.session_state[var] = "-"
 
-# --- 2. YLÄPALKKI & KOKOONPANO ---
-with st.container():
-    c1, c2, c3, c4, c5 = st.columns([1, 1.5, 1.5, 0.7, 0.8])
-    pvm = c1.date_input("Pvm", datetime.now())
-    koti_n = c2.text_input("Kotijoukkue", "Koti")
-    vieras_n = c3.text_input("Vierailija", "Vieras")
-    jakso = c4.selectbox("Jakso", ["1", "2", "S", "K"])
-    vuoro = st.session_state.get('vuoro_val', '1A')
-    vuoro = c5.selectbox("Vuoro", [f"{n}{v}" for n in range(1,5) for v in ["A", "L"]], key='vuoro_val')
+# --- 2. JOUKKUEDATA (Linkin ottelu: JoMa vs SoJy) ---
+koti_n = "Joensuun Maila"
+vieras_n = "Sotkamon Jymy"
 
-with st.expander("⚙️ Aseta pelaajien nimet (1 per rivi)"):
-    ec1, ec2 = st.columns(2)
-    koti_pelaajat_raw = ec1.text_area(f"{koti_n} pelaajat", "1.\n2.\n3.\n4.\n5.\n6.\n7.\n8.\n9.\n10.\n11.\n12.", height=200)
-    vieras_pelaajat_raw = ec2.text_area(f"{vieras_n} pelaajat", "1.\n2.\n3.\n4.\n5.\n6.\n7.\n8.\n9.\n10.\n11.\n12.", height=200)
+k_nimet = ["1. V. Viita", "2. K. Kuosmanen", "3. J. Toivola", "4. E. Litmanen", "5. K. Hämäläinen", 
+           "6. S. Tirkkonen", "7. V. Kettunen", "8. J. Hacklin", "9. H. Rautiainen", "10. P. Piironen", "11. J. Korhonen", "12. T. Jussila"]
+v_nimet = ["1. I. Piirainen", "2. S. Huotari", "3. J. Purmonen", "4. H. Pekkinen", "5. J. Vikström", 
+           "6. V. Veittikoski", "7. A. Huotari", "8. V. Kortehisto", "9. E. Heikkala", "10. R. Roivainen", "11. K. Kuosmanen", "12. L. Rönkkö"]
+
+# --- 3. YLÄPALKKI ---
+with st.container():
+    c1, c2, c3, c4 = st.columns([1, 1, 1, 1])
+    sisalla = c1.selectbox("Sisävuoro", [koti_n, vieras_n])
+    jakso = c2.selectbox("Jakso", ["1", "2", "S", "K"])
+    vuoro = c3.selectbox("Vuoro", [f"{n}{v}" for n in range(1,5) for v in ["A", "L"]])
     
-    k_list = [n.strip() for n in koti_pelaajat_raw.split('\n') if n.strip()][:12]
-    v_list = [n.strip() for n in vieras_pelaajat_raw.split('\n') if n.strip()][:12]
-    # Täytetään tyhjällä jos listat liian lyhyitä
-    k_list += [f"K{i}" for i in range(len(k_list)+1, 13)]
-    v_list += [f"V{i}" for i in range(len(v_list)+1, 13)]
+    # Määritetään kumpi on ulkona
+    ulkona = vieras_n if sisalla == koti_n else koti_n
+    lyoja_lista = k_nimet if sisalla == koti_n else v_nimet
+    up_lista = v_nimet if sisalla == koti_n else k_nimet
 
 # Statusrivi
-st.warning(f"**VALITTU:** L: {st.session_state.v_lyoja} | Nro: {st.session_state.v_lyonti_nro} | S: {st.session_state.v_suunta} | T: {st.session_state.v_tyyppi} | R: {st.session_state.v_tulos} | UP: {st.session_state.v_up}")
+st.warning(f"**VUORO:** {sisalla} sisällä, {ulkona} ulkona | **VALITTU:** L: {st.session_state.v_lyoja} | UP: {st.session_state.v_up}")
 
-# --- 3. PÄÄNÄKYMÄ ---
-col_l, col_m, col_r = st.columns([1.5, 3.5, 2.5])
+# --- 4. PÄÄNÄKYMÄ ---
+col_l, col_m, col_r = st.columns([1.8, 3.2, 2.5])
 
-# SARAKE 1: LYÖJÄT (Nimet päivittyvät asetuksista)
+# SARAKE 1: LYÖJÄT (Valitun sisäjoukkueen mukaan)
 with col_l:
-    st.caption("LYÖJÄ")
-    k_c, v_c = st.columns(2)
+    st.caption(f"LYÖJÄ ({sisalla})")
     for i in range(12):
-        if k_c.button(k_list[i], key=f"lk{i}", use_container_width=True): st.session_state.v_lyoja = k_list[i]
-        if v_c.button(v_list[i], key=f"lv{i}", use_container_width=True): st.session_state.v_lyoja = v_list[i]
+        if st.button(lyoja_lista[i], key=f"lk{i}", use_container_width=True): 
+            st.session_state.v_lyoja = lyoja_lista[i]
 
 # SARAKE 2: PELITAPAHTUMAT
 with col_m:
@@ -68,8 +66,7 @@ with col_m:
     st.write("---")
     st.caption("LYÖNTITYYPPI")
     ly_cols = st.columns(3)
-    ly_lista = ["Pieni", "Pomppu", "Pussari", "Varsi", "M-Kova", "Hämy", "Koppi", "Vapaa", "Kumura"]
-    for i, t in enumerate(ly_lista):
+    for i, t in enumerate(["Pieni", "Pomppu", "Pussari", "Varsi", "M-Kova", "Hämy", "Koppi", "Vapaa", "Kumura"]):
         if ly_cols[i % 3].button(t, key=f"lt_{t}", use_container_width=True): st.session_state.v_tyyppi = t
 
     st.write("---")
@@ -83,20 +80,16 @@ with col_m:
 with col_r:
     st.caption("TULOS")
     tr_cols = st.columns(2)
-    t_lista = ["palo", "haava", "eteni", "laiton", "vaihto", "juoksu", "kentällemeno"]
-    for i, t in enumerate(t_lista):
+    for i, t in enumerate(["palo", "haava", "eteni", "laiton", "vaihto", "juoksu", "kentällemeno"]):
         if tr_cols[i % 2].button(t, key=f"tr_{t}", use_container_width=True): st.session_state.v_tulos = t
 
     st.write("---")
-    st.caption("SUORITTAVA UP")
-    # Ulkopelaajat määräytyvät lyöjän joukkueen mukaan
-    up_nimet = v_list if (st.session_state.v_lyoja in k_list) else k_list
+    st.caption(f"UP ({ulkona})")
     up_cols = st.columns(3)
     for i in range(12):
-        if up_cols[i % 3].button(up_nimet[i], key=f"up{i}", use_container_width=True): st.session_state.v_up = up_nimet[i]
+        if up_cols[i % 3].button(up_lista[i], key=f"up{i}", use_container_width=True): st.session_state.v_up = up_lista[i]
     if st.button("OTTAMATON", use_container_width=True): st.session_state.v_up = "Ottamaton"
 
-    st.caption("LAATU")
     la1, la2 = st.columns(2)
     if la1.button("PUHDAS", use_container_width=True): st.session_state.v_up_laatu = "Puhdas"
     if la2.button("NAKITUS", use_container_width=True): st.session_state.v_up_laatu = "Nakitus"
@@ -110,8 +103,8 @@ with col_r:
     save_col, undo_col = st.columns([2, 1])
     if save_col.button("💾 TALLENNA", type="primary", use_container_width=True):
         uusi = {
-            "Pvm": pvm, "Jakso": jakso, "Vuoro": vuoro, "Tilanne": t_map[til_val], 
-            "Lyöjä": st.session_state.v_lyoja, "Lyönti nro": st.session_state.v_lyonti_nro,
+            "Pvm": "2024-05-15", "Peli": f"{koti_n}-{vieras_n}", "Jakso": jakso, "Vuoro": vuoro, "Tilanne": t_map[til_val], 
+            "Sisällä": sisalla, "Lyöjä": st.session_state.v_lyoja, "Lyönti nro": st.session_state.v_lyonti_nro,
             "Palot": palot, "Lyönti": st.session_state.v_tyyppi, "Merkattu": "M" if merkattu else "", 
             "Suunta": st.session_state.v_suunta, "Tulos": st.session_state.v_tulos, "UP": st.session_state.v_up, 
             "UP-Laatu": st.session_state.v_up_laatu, "Kuvio": up_kuvio, "Takapalo": "K" if takapalo else ""
@@ -125,12 +118,10 @@ with col_r:
             st.session_state.data = st.session_state.data.iloc[:-1]
             st.rerun()
 
-# --- 4. LOKI ---
+# --- 5. LOKI ---
 st.write("---")
-st.write("### 📋 Tapahtumaloki")
 st.dataframe(st.session_state.data, use_container_width=True)
 
-# Export-nappi
 if not st.session_state.data.empty:
     csv = st.session_state.data.to_csv(index=False).encode('utf-8')
-    st.download_button("📥 Lataa ottelun data (CSV)", csv, f"ottelu_{pvm}.csv", "text/csv")
+    st.download_button("📥 Lataa CSV", csv, "pesis_data.csv", "text/csv")
