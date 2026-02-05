@@ -22,12 +22,11 @@ for var in ['v_lyoja', 'v_suunta', 'v_tyyppi', 'v_tulos', 'v_up', 'v_up_laatu', 
     if var not in st.session_state: st.session_state[var] = "-"
 
 # --- 1. NIMIEN SYÖTTÖ (Käsin) ---
-with st.expander("📝 ASETA JOUKKUEET JA PELAAJAT", expanded=True):
+with st.expander("📝 ASETA JOUKKUEET JA PELAAJAT", expanded=False):
     c_k, c_v = st.columns(2)
     koti_nimi = c_k.text_input("Kotijoukkue", "KPL")
     vieras_nimi = c_v.text_input("Vierasjoukkue", "Tahko")
     
-    # Korjattu muuttujanimi tässä: koti_nimet_raw
     koti_nimet_raw = c_k.text_area(f"{koti_nimi}: Pelaajat (1 per rivi)", "1. Saukko\n2. Vartama\n3. Pitkänen\n4. Ruuska\n5. J. Luoma\n6. V. Luoma\n7. Latvala\n8. Laine\n9. Pesonen\n10. Nikkanen\n11. Toivola\n12. Alanen", height=150)
     vieras_nimet_raw = c_v.text_area(f"{vieras_nimi}: Pelaajat (1 per rivi)", "1. Nurmio\n2. Kauppinen\n3. Kettunen\n4. Kortehisto\n5. Kyhyräinen\n6. Raesmaa\n7. Kuosmanen\n8. Heikkala\n9. Tuomi\n10. Niemi\n11. Patova\n12. Matikka", height=150)
 
@@ -36,13 +35,12 @@ with st.expander("📝 ASETA JOUKKUEET JA PELAAJAT", expanded=True):
 
 # --- 2. PELIN HALLINTA ---
 st.divider()
-c1, c2, c3, c4 = st.columns([1.5, 1, 1, 1])
+c1, c2, c3 = st.columns([1.5, 1, 1])
 
 sisalla = c1.selectbox("SISÄLLÄ NYT:", [koti_nimi, vieras_nimi])
 jakso = c2.selectbox("JAKSO", ["1", "2", "S", "K"])
 vuoro = c3.selectbox("VUORO", [f"{n}{v}" for n in range(1,5) for v in ["A", "L"]])
 
-# Määritetään kuka on ulkona
 ulkona = vieras_nimi if sisalla == koti_nimi else koti_nimi
 lyoja_lista = k_lista if sisalla == koti_nimi else v_lista
 up_lista = v_lista if sisalla == koti_nimi else k_lista
@@ -59,7 +57,7 @@ with col_l:
         if st.button(nimi, key=f"l_{i}", use_container_width=True):
             st.session_state.v_lyoja = nimi
 
-# SARAKE 2: TILANNE JA LYÖNTI
+# SARAKE 2: TILANNE, MERKKI JA LYÖNTI
 with col_m:
     tc1, tc2, tc3 = st.columns([2, 1, 1])
     t_map = {"0": "0 til", "1": "1 til", "0-2": "0-2", "0-3": "0-3", "1-2": "1-2", "1-3": "1-3", "2-3": "2-3", "Ajo": "Ajo"}
@@ -67,7 +65,11 @@ with col_m:
     palot = tc2.radio("Palot", ["0", "1", "2"], horizontal=True)
     st.session_state.v_lyonti_nro = tc3.radio("Lyönti", ["1", "2", "3"], horizontal=True)
 
+    # SIIRRETTY: Merkattu tähän väliin
+    st.write("")
+    merkattu = st.checkbox("MERKKI PÄÄLLÄ (Merkattu)", key="merk_val")
     st.write("---")
+
     st.caption("LYÖNTITYYPPI")
     ly_cols = st.columns(3)
     tyypit = ["Pieni", "Pomppu", "Pussari", "Varsi", "Kova", "Hämylähtö", "Koppi", "Vapaa", "Kumura"]
@@ -105,7 +107,6 @@ with col_r:
 
     st.write("---")
     cx1, cx2 = st.columns(2)
-    merkattu = cx1.checkbox("MERKKI")
     takapalo = cx1.checkbox("TAKAPALO")
     up_kuvio = cx2.selectbox("Kuvio", ["", "MIKE", "PERTSA", "PYP"])
 
@@ -113,13 +114,14 @@ with col_r:
         uusi = {
             "Jakso": jakso, "Vuoro": vuoro, "Tilanne": t_map[til_val], "Sisällä": sisalla,
             "Lyöjä": st.session_state.v_lyoja, "Lyönti nro": st.session_state.v_lyonti_nro,
-            "Palot": palot, "Lyönti": st.session_state.v_tyyppi, "Merkattu": "M" if merkattu else "", 
-            "Suunta": st.session_state.v_suunta, "Tulos": st.session_state.v_tulos, 
-            "UP": st.session_state.v_up, "UP-Laatu": st.session_state.v_up_laatu, "Kuvio": up_kuvio, "Takapalo": "K" if takapalo else ""
+            "Palot": palot, "Merkattu": "Kyllä" if merkattu else "Ei",
+            "Lyönti": st.session_state.v_tyyppi, "Suunta": st.session_state.v_suunta, 
+            "Tulos": st.session_state.v_tulos, "UP": st.session_state.v_up, 
+            "UP-Laatu": st.session_state.v_up_laatu, "Kuvio": up_kuvio, "Takapalo": "K" if takapalo else ""
         }
         st.session_state.data = pd.concat([st.session_state.data, pd.DataFrame([uusi])], ignore_index=True)
-        # Nollataan vain valinnat, pidetään tilanne
-        for k in ['v_suunta', 'v_tyyppi', 'v_tulos', 'v_up', 'v_up_laatu']: st.session_state[k] = "-"
+        # Nollataan valinnat
+        for k in ['v_lyoja', 'v_suunta', 'v_tyyppi', 'v_tulos', 'v_up', 'v_up_laatu']: st.session_state[k] = "-"
         st.rerun()
 
     if st.button("❌ POISTA VIIMEISIN", use_container_width=True):
