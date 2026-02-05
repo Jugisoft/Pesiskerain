@@ -90,7 +90,7 @@ with col_r:
     for i, t in enumerate(tulokset):
         if tr_cols[i % 2].button(t, key=f"tr_{t}", use_container_width=True): st.session_state.v_tulos = t
 
-    st.caption("SISÄPELISUORITUS")
+    st.caption("Onnistunut / Epäonnistunut")
     s_col1, s_col2 = st.columns(2)
     if s_col1.button("✅ ONNISTUNUT", use_container_width=True): st.session_state.v_sisapeli = "Onnistunut"
     if s_col2.button("❌ EPÄONNISTUNUT", use_container_width=True): st.session_state.v_sisapeli = "Epäonnistunut"
@@ -123,7 +123,7 @@ with col_r:
             "Lyönti": st.session_state.v_tyyppi, "Suunta": st.session_state.v_suunta, 
             "Tulos": st.session_state.v_tulos, "Sisäpeli": st.session_state.v_sisapeli,
             "UP": st.session_state.v_up, "UP-Laatu": st.session_state.v_up_laatu, 
-            "Kuvio": up_kuvio, "Takapalo": "K" if takapalo else ""
+            "Kuvio": up_kuvio, "Takapalo": "Takapalo" if takapalo else ""
         }
         st.session_state.data = pd.concat([st.session_state.data, pd.DataFrame([uusi])], ignore_index=True)
         for k in ['v_lyoja', 'v_suunta', 'v_tyyppi', 'v_tulos', 'v_up', 'v_up_laatu', 'v_sisapeli']: st.session_state[k] = "-"
