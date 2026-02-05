@@ -67,7 +67,7 @@ with col_m:
 
     # SIIRRETTY: Merkattu tähän väliin
     st.write("")
-    merkattu = st.checkbox("MERKKI PÄÄLLÄ (Merkattu)", key="merk_val")
+    merkattu = st.checkbox("Merkattu", key="merk_val")
     st.write("---")
 
     st.caption("LYÖNTITYYPPI")
