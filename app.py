@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime
 
 # --- ASETUKSET ---
-st.set_page_config(page_title="Pesis Live v3.3", layout="wide")
+st.set_page_config(page_title="Pesis Live v3.4", layout="wide")
 
 st.markdown("""
     <style>
@@ -20,7 +20,7 @@ st.markdown("""
 # Alustukset
 if 'data' not in st.session_state: 
     st.session_state.data = pd.DataFrame()
-for var in ['v_lyoja', 'v_suunta', 'v_tyyppi', 'v_tulos', 'v_up', 'v_up_laatu']:
+for var in ['v_lyoja', 'v_suunta', 'v_tyyppi', 'v_tulos', 'v_up', 'v_up_laatu', 'v_lyonti_nro']:
     if var not in st.session_state: st.session_state[var] = "-"
 
 # --- 1. YLÄPALKKI ---
@@ -33,7 +33,7 @@ with c4: jakso = st.selectbox("Jakso", ["1", "2", "S", "K"])
 with c5: vuoro = st.selectbox("Vuoro", [f"{n}{v}" for n in range(1,5) for v in ["A", "L"]])
 
 # Statusrivi
-st.warning(f"**NYT:** Lyöjä: {st.session_state.v_lyoja} | Suunta: {st.session_state.v_suunta} | Tyyppi: {st.session_state.v_tyyppi} | Tulos: {st.session_state.v_tulos} | UP: {st.session_state.v_up}")
+st.warning(f"**VALITTU:** L: {st.session_state.v_lyoja} | Nro: {st.session_state.v_lyonti_nro} | S: {st.session_state.v_suunta} | T: {st.session_state.v_tyyppi} | R: {st.session_state.v_tulos} | UP: {st.session_state.v_up}")
 
 # --- 2. PÄÄNÄKYMÄ ---
 col_l, col_m, col_r = st.columns([1.5, 3.5, 2.5])
@@ -43,17 +43,20 @@ with col_l:
     st.caption("LYÖJÄ")
     k_c, v_c = st.columns(2)
     for i in range(1, 13):
-        if k_c.button(f"K{i}. Pelaaja", key=f"lk{i}", use_container_width=True): 
-            st.session_state.v_lyoja = f"K{i}"
-        if v_c.button(f"V{i}. Pelaaja", key=f"lv{i}", use_container_width=True): 
-            st.session_state.v_lyoja = f"V{i}"
+        if k_c.button(f"K{i}. Pelaaja", key=f"lk{i}", use_container_width=True): st.session_state.v_lyoja = f"K{i}"
+        if v_c.button(f"V{i}. Pelaaja", key=f"lv{i}", use_container_width=True): st.session_state.v_lyoja = f"V{i}"
 
 # SARAKE 2: PELITAPAHTUMAT
 with col_m:
+    # Tilanne, Palot JA Lyönti nro
+    tc1, tc2, tc3 = st.columns([2, 1, 1])
     t_map = {"0": "0 til", "1": "1 til", "0-2": "0-2", "0-3": "0-3", "1-2": "1-2", "1-3": "1-3", "2-3": "2-3", "Ajo": "Ajo"}
-    tc1, tc2 = st.columns([3, 1])
     til_val = tc1.radio("Tilanne", list(t_map.keys()), horizontal=True)
     palot = tc2.radio("Palot", ["0", "1", "2"], horizontal=True)
+    
+    # UUSI: Lyönti nro
+    ly_nro = tc3.radio("Lyönti", ["1", "2", "3"], horizontal=True)
+    st.session_state.v_lyonti_nro = ly_nro
 
     st.write("---")
     st.caption("LYÖNTITYYPPI")
@@ -100,23 +103,23 @@ with col_r:
     if save_col.button("💾 TALLENNA", type="primary", use_container_width=True):
         uusi = {
             "Pvm": pvm, "Jakso": jakso, "Vuoro": vuoro, "Tilanne": t_map[til_val], 
-            "Lyöjä": st.session_state.v_lyoja, "Palot": palot, "Lyönti": st.session_state.v_tyyppi, 
-            "Merkattu": "M" if merkattu else "", "Suunta": st.session_state.v_suunta, 
-            "Tulos": st.session_state.v_tulos, "UP": st.session_state.v_up, 
+            "Lyöjä": st.session_state.v_lyoja, "Lyönti nro": st.session_state.v_lyonti_nro,
+            "Palot": palot, "Lyönti": st.session_state.v_tyyppi, "Merkattu": "M" if merkattu else "", 
+            "Suunta": st.session_state.v_suunta, "Tulos": st.session_state.v_tulos, "UP": st.session_state.v_up, 
             "UP-Laatu": st.session_state.v_up_laatu, "Kuvio": up_kuvio, "Takapalo": "K" if takapalo else ""
         }
-        st.session_state.data = pd.concat([pd.DataFrame([uusi]), st.session_state.data], ignore_index=True)
+        # Lisätään loppuun (ignore_index=True)
+        st.session_state.data = pd.concat([st.session_state.data, pd.DataFrame([uusi])], ignore_index=True)
         # Nollaus
         for k in ['v_suunta', 'v_tyyppi', 'v_tulos', 'v_up', 'v_up_laatu']: st.session_state[k] = "-"
         st.rerun()
     
-    # POISTO-NAPPI
-    if undo_col.button("❌ POISTA", use_container_width=True, help="Poistaa viimeisimmän rivin"):
+    if undo_col.button("❌ POISTA", use_container_width=True):
         if not st.session_state.data.empty:
-            st.session_state.data = st.session_state.data.iloc[1:] # Poistaa ylimmän (viimeisimmän)
+            st.session_state.data = st.session_state.data.iloc[:-1] # Poistaa alimman (viimeisimmän)
             st.rerun()
 
-# --- 3. LOKI (Näytetään kaikki rivit) ---
+# --- 3. LOKI ---
 st.write("---")
 st.write("### 📋 Tapahtumaloki")
 st.dataframe(st.session_state.data, use_container_width=True)
