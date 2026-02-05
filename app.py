@@ -87,7 +87,7 @@ with col_m:
 with col_r:
     st.caption("TULOS")
     tr_cols = st.columns(2)
-    tulokset = ["palo", "haava", "eteni", "laiton", "vaihto", "juoksu", "kentällemeno"]
+    tulokset = ["palo", "haava", "eteni", "laiton", "vaihto", "juoksu", "kentällemeno", "vapaataival"]
     for i, t in enumerate(tulokset):
         if tr_cols[i % 2].button(t, key=f"tr_{t}", use_container_width=True): st.session_state.v_tulos = t
 
