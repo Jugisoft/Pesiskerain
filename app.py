@@ -18,7 +18,7 @@ st.markdown("""
 
 # Alustukset
 if 'data' not in st.session_state: st.session_state.data = pd.DataFrame()
-for var in ['v_lyoja', 'v_suunta', 'v_tyyppi', 'v_tulos', 'v_up', 'v_up_laatu', 'v_lyonti_nro']:
+for var in ['v_lyoja', 'v_suunta', 'v_tyyppi', 'v_tulos', 'v_up', 'v_up_laatu', 'v_lyonti_nro', 'v_sisapeli']:
     if var not in st.session_state: st.session_state[var] = "-"
 
 # --- 1. NIMIEN SYÖTTÖ (Käsin) ---
@@ -65,7 +65,6 @@ with col_m:
     palot = tc2.radio("Palot", ["0", "1", "2"], horizontal=True)
     st.session_state.v_lyonti_nro = tc3.radio("Lyönti", ["1", "2", "3"], horizontal=True)
 
-    # SIIRRETTY: Merkattu tähän väliin
     st.write("")
     merkattu = st.checkbox("Merkattu", key="merk_val")
     st.write("---")
@@ -91,6 +90,11 @@ with col_r:
     for i, t in enumerate(tulokset):
         if tr_cols[i % 2].button(t, key=f"tr_{t}", use_container_width=True): st.session_state.v_tulos = t
 
+    st.caption("SISÄPELISUORITUS")
+    s_col1, s_col2 = st.columns(2)
+    if s_col1.button("✅ ONNISTUNUT", use_container_width=True): st.session_state.v_sisapeli = "Onnistunut"
+    if s_col2.button("❌ EPÄONNISTUNUT", use_container_width=True): st.session_state.v_sisapeli = "Epäonnistunut"
+
     st.write("---")
     st.caption(f"UP ({ulkona})")
     up_cols = st.columns(3)
@@ -101,10 +105,10 @@ with col_r:
         st.session_state.v_up = "Ottamaton"
 
     st.caption("UP-SUORITUS")
-    la1, la2, la3 = st.columns(3)
-    if la1.button("PUHDAS", use_container_width=True): st.session_state.v_up_laatu = "Puhdas"
-    if la2.button("NAKITUS", use_container_width=True): st.session_state.v_up_laatu = "Nakitus"
-    if la3.button("HARHAHEITTO", use_container_width=True): st.session_state.v_up_laatu = "Harhaheitto"    
+    la_cols = st.columns(3)
+    if la_cols[0].button("PUHDAS", use_container_width=True): st.session_state.v_up_laatu = "Puhdas"
+    if la_cols[1].button("NAKITUS", use_container_width=True): st.session_state.v_up_laatu = "Nakitus"
+    if la_cols[2].button("HARHAHEITTO", use_container_width=True): st.session_state.v_up_laatu = "Harhaheitto"    
 
     st.write("---")
     cx1, cx2 = st.columns(2)
@@ -117,12 +121,12 @@ with col_r:
             "Lyöjä": st.session_state.v_lyoja, "Lyönti nro": st.session_state.v_lyonti_nro,
             "Palot": palot, "Merkattu": "Kyllä" if merkattu else "Ei",
             "Lyönti": st.session_state.v_tyyppi, "Suunta": st.session_state.v_suunta, 
-            "Tulos": st.session_state.v_tulos, "UP": st.session_state.v_up, 
-            "UP-Laatu": st.session_state.v_up_laatu, "Kuvio": up_kuvio, "Takapalo": "K" if takapalo else ""
+            "Tulos": st.session_state.v_tulos, "Sisäpeli": st.session_state.v_sisapeli,
+            "UP": st.session_state.v_up, "UP-Laatu": st.session_state.v_up_laatu, 
+            "Kuvio": up_kuvio, "Takapalo": "K" if takapalo else ""
         }
         st.session_state.data = pd.concat([st.session_state.data, pd.DataFrame([uusi])], ignore_index=True)
-        # Nollataan valinnat
-        for k in ['v_lyoja', 'v_suunta', 'v_tyyppi', 'v_tulos', 'v_up', 'v_up_laatu']: st.session_state[k] = "-"
+        for k in ['v_lyoja', 'v_suunta', 'v_tyyppi', 'v_tulos', 'v_up', 'v_up_laatu', 'v_sisapeli']: st.session_state[k] = "-"
         st.rerun()
 
     if st.button("❌ POISTA VIIMEISIN", use_container_width=True):
