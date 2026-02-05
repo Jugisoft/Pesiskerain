@@ -6,7 +6,7 @@ from datetime import datetime
 
 # --- ASETUKSET ---
 st.set_page_config(page_title="Pesis-Tilastoija v11.33", layout="wide")
-KUVAN_NIMI = "image_de6e7c.png" # Varmista että tämä on oikein
+KUVAN_NIMI = "Näyttökuva 2026-02-05 154559.png" # Varmista että tämä on oikein
 
 # Alustetaan muisti
 if 'data' not in st.session_state:
