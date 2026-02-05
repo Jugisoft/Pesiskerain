@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime
 
 # --- 1. ASETUKSET JA TYYLIT ---
-st.set_page_config(page_title="Pesis Live v4.1 - JoMa vs SoJy", layout="wide")
+st.set_page_config(page_title="Pesis Live v4.2 - KPL vs Tahko", layout="wide")
 
 st.markdown("""
     <style>
@@ -21,14 +21,16 @@ if 'data' not in st.session_state: st.session_state.data = pd.DataFrame()
 for var in ['v_lyoja', 'v_suunta', 'v_tyyppi', 'v_tulos', 'v_up', 'v_up_laatu', 'v_lyonti_nro']:
     if var not in st.session_state: st.session_state[var] = "-"
 
-# --- 2. JOUKKUEDATA (Linkin ottelu: JoMa vs SoJy) ---
-koti_n = "Joensuun Maila"
-vieras_n = "Sotkamon Jymy"
+# --- 2. JOUKKUEDATA (KPL vs Tahko) ---
+koti_n = "Kouvolan Pallonlyöjät"
+vieras_n = "Hyvinkään Tahko"
 
-k_nimet = ["1. V. Viita", "2. K. Kuosmanen", "3. J. Toivola", "4. E. Litmanen", "5. K. Hämäläinen", 
-           "6. S. Tirkkonen", "7. V. Kettunen", "8. J. Hacklin", "9. H. Rautiainen", "10. P. Piironen", "11. J. Korhonen", "12. T. Jussila"]
-v_nimet = ["1. I. Piirainen", "2. S. Huotari", "3. J. Purmonen", "4. H. Pekkinen", "5. J. Vikström", 
-           "6. V. Veittikoski", "7. A. Huotari", "8. V. Kortehisto", "9. E. Heikkala", "10. R. Roivainen", "11. K. Kuosmanen", "12. L. Rönkkö"]
+# Pelaajat linkin mukaisessa järjestyksessä
+k_nimet = ["1. T. Saukko", "2. P. Vartama", "3. E. Pitkänen", "4. A. Ruuska", "5. J. Luoma", 
+           "6. V. Luoma", "7. M. Latvala", "8. E. Laine", "9. I. Pesonen", "10. T. Nikkanen", "11. J. Toivola", "12. P. Alanen"]
+
+v_nimet = ["1. T. Nurmio", "2. J. Kauppinen", "3. V. Kettunen", "4. V. Kortehisto", "5. S. Kyhyräinen", 
+           "6. L. Raesmaa", "7. K. Kuosmanen", "8. J. Heikkala", "9. E. Tuomi", "10. J. Niemi", "11. S. Patova", "12. J. Matikka"]
 
 # --- 3. YLÄPALKKI ---
 with st.container():
@@ -37,18 +39,16 @@ with st.container():
     jakso = c2.selectbox("Jakso", ["1", "2", "S", "K"])
     vuoro = c3.selectbox("Vuoro", [f"{n}{v}" for n in range(1,5) for v in ["A", "L"]])
     
-    # Määritetään kumpi on ulkona
     ulkona = vieras_n if sisalla == koti_n else koti_n
     lyoja_lista = k_nimet if sisalla == koti_n else v_nimet
     up_lista = v_nimet if sisalla == koti_n else k_nimet
 
-# Statusrivi
-st.warning(f"**VUORO:** {sisalla} sisällä, {ulkona} ulkona | **VALITTU:** L: {st.session_state.v_lyoja} | UP: {st.session_state.v_up}")
+st.warning(f"**TILANNE:** {sisalla} lyö | {ulkona} ulkona")
 
 # --- 4. PÄÄNÄKYMÄ ---
 col_l, col_m, col_r = st.columns([1.8, 3.2, 2.5])
 
-# SARAKE 1: LYÖJÄT (Valitun sisäjoukkueen mukaan)
+# SARAKE 1: LYÖJÄT
 with col_l:
     st.caption(f"LYÖJÄ ({sisalla})")
     for i in range(12):
@@ -84,7 +84,7 @@ with col_r:
         if tr_cols[i % 2].button(t, key=f"tr_{t}", use_container_width=True): st.session_state.v_tulos = t
 
     st.write("---")
-    st.caption(f"UP ({ulkona})")
+    st.caption(f"SUORITTAVA UP ({ulkona})")
     up_cols = st.columns(3)
     for i in range(12):
         if up_cols[i % 3].button(up_lista[i], key=f"up{i}", use_container_width=True): st.session_state.v_up = up_lista[i]
@@ -103,7 +103,7 @@ with col_r:
     save_col, undo_col = st.columns([2, 1])
     if save_col.button("💾 TALLENNA", type="primary", use_container_width=True):
         uusi = {
-            "Pvm": "2024-05-15", "Peli": f"{koti_n}-{vieras_n}", "Jakso": jakso, "Vuoro": vuoro, "Tilanne": t_map[til_val], 
+            "Jakso": jakso, "Vuoro": vuoro, "Tilanne": t_map[til_val], 
             "Sisällä": sisalla, "Lyöjä": st.session_state.v_lyoja, "Lyönti nro": st.session_state.v_lyonti_nro,
             "Palot": palot, "Lyönti": st.session_state.v_tyyppi, "Merkattu": "M" if merkattu else "", 
             "Suunta": st.session_state.v_suunta, "Tulos": st.session_state.v_tulos, "UP": st.session_state.v_up, 
@@ -124,4 +124,4 @@ st.dataframe(st.session_state.data, use_container_width=True)
 
 if not st.session_state.data.empty:
     csv = st.session_state.data.to_csv(index=False).encode('utf-8')
-    st.download_button("📥 Lataa CSV", csv, "pesis_data.csv", "text/csv")
+    st.download_button("📥 Lataa CSV", csv, "kpl_tahko_data.csv", "text/csv")
