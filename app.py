@@ -79,7 +79,7 @@ with col_m:
     st.write("---")
     st.caption("SUUNTA")
     s_cols = st.columns(3)
-    suunnat = ["3 jatke", "3 taakse", "3 luukku", "3 sauma", "keskitakanen", "keskisauma", "keskipieni", "2 taakse", "2 luukku", "2 sauma", "2 raja", "1 raja"]
+    suunnat = ["3 jatke", "3 taakse", "3 luukku", "3 sauma", "keskitakanen", "keskisauma", "keskipieni", "2 jatke", "2 taakse", "2 luukku", "2 sauma", "2 raja", "3 raja"]
     for i, s in enumerate(suunnat):
         if s_cols[i % 3].button(s, key=f"s_{s}", use_container_width=True): st.session_state.v_suunta = s
 
@@ -87,7 +87,7 @@ with col_m:
 with col_r:
     st.caption("TULOS")
     tr_cols = st.columns(2)
-    tulokset = ["palo", "haava", "eteni", "laiton", "vaihto", "juoksu", "kentällemeno", "vapaataival"]
+    tulokset = ["palo", "haava", "eteni", "laiton", "vaihto", "juoksu", "kentällemeno", "vapaataival", "tuottamaton"]
     for i, t in enumerate(tulokset):
         if tr_cols[i % 2].button(t, key=f"tr_{t}", use_container_width=True): st.session_state.v_tulos = t
 
