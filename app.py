@@ -70,7 +70,7 @@ with col_m:
     st.write("---")
     st.caption("LYÖNTITYYPPI")
     ly_cols = st.columns(3)
-    tyypit = ["Pieni", "Pomppu", "Pussari", "Varsi", "M-Kova", "Hämy", "Koppi", "Vapaa", "Kumura"]
+    tyypit = ["Pieni", "Pomppu", "Pussari", "Varsi", "Kova", "Hämylähtö", "Koppi", "Vapaa", "Kumura"]
     for i, t in enumerate(tyypit):
         if ly_cols[i % 3].button(t, key=f"lt_{t}", use_container_width=True): st.session_state.v_tyyppi = t
 
