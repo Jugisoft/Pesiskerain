@@ -101,7 +101,7 @@ with col_r:
         st.session_state.v_up = "Ottamaton"
 
     st.caption("UP-SUORITUS")
-    la1, la2, la3 = st.columns(2)
+    la1, la2, la3 = st.columns(3)
     if la1.button("PUHDAS", use_container_width=True): st.session_state.v_up_laatu = "Puhdas"
     if la2.button("NAKITUS", use_container_width=True): st.session_state.v_up_laatu = "Nakitus"
     if la3.button("HARHAHEITTO", use_container_width=True): st.session_state.v_up_laatu = "Harhaheitto"    
