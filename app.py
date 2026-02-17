@@ -175,3 +175,60 @@ st.dataframe(st.session_state.data, use_container_width=True)
 if not st.session_state.data.empty:
     csv = st.session_state.data.to_csv(index=False).encode('utf-8')
     st.download_button("📥 Lataa CSV", csv, "peli_data.csv", "text/csv")
+
+# --- 5. VEDONLYÖNTIYHTIÖN EXPORT-TYÖKALU ---
+if not st.session_state.data.empty:
+    st.write("---")
+    st.header("📤 VEDONLYÖNTI-EXPORT (Plug & Play)")
+
+    df_export = st.session_state.data.copy()
+    
+    # 1. Luodaan yhtiön haluamat sarakkeet
+    onnistumiset = ["vaihto", "juoksu", "kentällemeno", "eteni"]
+    df_export['Onnistuminen'] = df_export['Tulos'].isin(onnistumiset).astype(int)
+    
+    # Määritellään väli (0-1, 1-2, 2-3, Kotiutus)
+    vali_map = {
+        "0 til": "0-1", "1 til": "1-2", "1-2": "2-3", 
+        "2-3": "3-Koti", "Ajo": "3-Koti", "0-2": "0-2", "1-3": "1-3"
+    }
+    df_export['Pesäväli'] = df_export['Tilanne'].map(vali_map)
+
+    # 2. Luodaan kooste ulkopelijoukkueen mukaan
+    def get_up_team(row):
+        return vieras_nimi if row['Sisällä'] == koti_nimi else koti_nimi
+    
+    df_export['Ulkopelijoukkue'] = df_export.apply(get_up_team, axis=1)
+
+    # Koostetaulukko (Yhtiön Excelin "oranssi ja harmaa pohja")
+    summary = df_export.groupby(['Ulkopelijoukkue', 'Pesäväli']).agg(
+        Yritykset=('Tulos', 'count'),
+        Onnistumiset=('Onnistuminen', 'sum')
+    ).reset_index()
+    
+    summary['Torjunta%'] = ((1 - (summary['Onnistumiset'] / summary['Yritykset'])) * 100).round(1)
+
+    # 3. Pelaajaspesiaalit (Lukkari ja ulkopelaajat)
+    # Erotellaan erityisesti kärpäset ja harhat
+    pelaaja_kooste = df_export.groupby(['UP', 'Tulos', 'UP-Laatu']).size().unstack(fill_value=0)
+
+    # --- LATAUSNÄKYMÄ ---
+    col_exp1, col_exp2 = st.columns(2)
+    
+    with col_exp1:
+        st.subheader("Joukkuedata")
+        st.dataframe(summary)
+        csv_summary = summary.to_csv(index=False).encode('utf-8')
+        st.download_button("📥 Lataa Joukkue-raportti", csv_summary, f"UP_Joukkueet_{datetime.now().strftime('%d%m')}.csv", "text/csv")
+
+    with col_exp2:
+        st.subheader("Pelaajadata")
+        st.dataframe(pelaaja_kooste)
+        csv_pelaajat = df_export.to_csv(index=False).encode('utf-8')
+        st.download_button("📥 Lataa Raakadata (Full Feed)", csv_pelaajat, f"UP_Raw_Feed_{datetime.now().strftime('%d%m')}.csv", "text/csv")
+
+    # Trendiviiva (Esim. 10 viimeisintä suoritusta)
+    st.write("---")
+    st.subheader("Ulkopelin trendi (Viimeisimmät suoritukset)")
+    df_export['Rolling_Torjunta'] = (1 - df_export['Onnistuminen']).rolling(window=10).mean() * 100
+    st.line_chart(df_export['Rolling_Torjunta'])
